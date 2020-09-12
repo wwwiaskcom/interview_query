@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupBy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">interview</a> &gt; <a href="index.source.html" class="el_package">com.lcj.framework.domain</a> &gt; <span class="el_source">GroupBy.java</span></div><h1>GroupBy.java</h1><pre class="source lang-java linenums">package com.lcj.framework.domain;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="fc" id="L7">public class GroupBy implements QueryHandleType {</span>
+    public static final int SUM = 1;
+    public static final int AVG = 2;
+
+<span class="fc" id="L11">    private List&lt;GroupByRule&gt; ruleChains = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L13">    private List&lt;AggregationRule&gt; aggregationChains = new ArrayList&lt;&gt;();</span>
+
+    public GroupBy addGroupByProperty(String propertyName) {
+<span class="fc" id="L16">        this.ruleChains.add(new GroupByRule(propertyName));</span>
+<span class="fc" id="L17">        return this;</span>
+    }
+
+    public GroupBy avg(String propertyName,String alias) {
+<span class="fc" id="L21">        this.aggregationChains.add(new AggregationRule(propertyName,AVG,alias));</span>
+<span class="fc" id="L22">        return this;</span>
+    }
+
+    public GroupBy avg(String propertyName,String alias,Integer scale) {
+<span class="fc" id="L26">        this.aggregationChains.add(new AggregationRule(propertyName,AVG,alias,scale));</span>
+<span class="fc" id="L27">        return this;</span>
+    }
+
+    public GroupBy sum(String propertyName,String alias,Integer scale) {
+<span class="fc" id="L31">        this.aggregationChains.add(new AggregationRule(propertyName,SUM,alias,scale));</span>
+<span class="fc" id="L32">        return this;</span>
+    }
+
+    public GroupBy sum(String propertyName,String alias) {
+<span class="fc" id="L36">        this.aggregationChains.add(new AggregationRule(propertyName,SUM,alias));</span>
+<span class="fc" id="L37">        return this;</span>
+    }
+
+    public class GroupByRule{
+        private String propertyName;
+
+<span class="fc" id="L43">        protected GroupByRule(String propertyName) {</span>
+<span class="fc" id="L44">            this.propertyName = propertyName;</span>
+<span class="fc" id="L45">        }</span>
+
+        public String getPropertyName() {
+<span class="fc" id="L48">            return propertyName;</span>
+        }
+    }
+
+    public class AggregationRule{
+
+        //聚合操作的字段
+        private String aggregationProperty;
+
+        private int type;
+
+        //别名、排序时可能用这个字段
+        private String alias;
+
+        //保留小数位
+        private Integer scale;
+
+<span class="fc" id="L65">        public AggregationRule(String aggregationProperty, int type, String alias) {</span>
+<span class="fc" id="L66">            this.aggregationProperty = aggregationProperty;</span>
+<span class="fc" id="L67">            this.type = type;</span>
+<span class="fc" id="L68">            this.alias = alias;</span>
+<span class="fc" id="L69">        }</span>
+
+<span class="fc" id="L71">        public AggregationRule(String aggregationProperty, int type, String alias,Integer scale) {</span>
+<span class="fc" id="L72">            this.aggregationProperty = aggregationProperty;</span>
+<span class="fc" id="L73">            this.type = type;</span>
+<span class="fc" id="L74">            this.alias = alias;</span>
+<span class="fc" id="L75">            this.scale = scale;</span>
+<span class="fc" id="L76">        }</span>
+
+        public String getAggregationProperty() {
+<span class="fc" id="L79">            return aggregationProperty;</span>
+        }
+
+        public int getType() {
+<span class="fc" id="L83">            return type;</span>
+        }
+
+        public String getAlias() {
+<span class="fc" id="L87">            return alias;</span>
+        }
+
+        public Integer getScale() {
+<span class="fc" id="L91">            return scale;</span>
+        }
+    }
+
+    public List&lt;GroupByRule&gt; getRuleChains() {
+<span class="fc" id="L96">        return ruleChains;</span>
+    }
+
+    public List&lt;AggregationRule&gt; getAggregationChains() {
+<span class="fc" id="L100">        return aggregationChains;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReflectUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">interview</a> &gt; <a href="index.source.html" class="el_package">com.lcj.framework.common</a> &gt; <span class="el_source">ReflectUtil.java</span></div><h1>ReflectUtil.java</h1><pre class="source lang-java linenums">package com.lcj.framework.common;
+
+import java.lang.invoke.SerializedLambda;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+<span class="nc" id="L7">public class ReflectUtil {</span>
+    /**
+     * 根据函数获取字段名称
+     * eg：User::getUserId --&gt; userId
+     * @param fn
+     * @param &lt;T&gt;
+     * @return
+     */
+    public static &lt;T&gt; String getFieldName(SFunction&lt;T, ?&gt; fn) {
+        // 从function取出序列化方法
+        Method writeReplaceMethod;
+        try {
+<span class="fc" id="L19">            writeReplaceMethod = fn.getClass().getDeclaredMethod(&quot;writeReplace&quot;);</span>
+<span class="nc" id="L20">        } catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L21">            throw new RuntimeException(e);</span>
+<span class="fc" id="L22">        }</span>
+
+        // 从序列化方法取出序列化的lambda信息
+<span class="fc" id="L25">        boolean isAccessible = writeReplaceMethod.isAccessible();</span>
+<span class="fc" id="L26">        writeReplaceMethod.setAccessible(true);</span>
+        SerializedLambda serializedLambda;
+        try {
+<span class="fc" id="L29">            serializedLambda = (SerializedLambda) writeReplaceMethod.invoke(fn);</span>
+<span class="nc" id="L30">        } catch (IllegalAccessException | InvocationTargetException e) {</span>
+<span class="nc" id="L31">            throw new RuntimeException(e);</span>
+<span class="fc" id="L32">        }</span>
+<span class="fc" id="L33">        writeReplaceMethod.setAccessible(isAccessible);</span>
+
+        // 从lambda信息取出method、field、class等
+        //fieldName形式例如UserId
+<span class="fc" id="L37">        String fieldName = serializedLambda.getImplMethodName().substring(&quot;get&quot;.length());</span>
+
+        //fieldName形式例如userId
+<span class="fc" id="L40">        fieldName = fieldName.replaceFirst(fieldName.charAt(0) + &quot;&quot;, (fieldName.charAt(0) + &quot;&quot;).toLowerCase());</span>
+        //fieldName变成_的形式例如user_id
+        //fieldName = fieldName.replaceAll(&quot;[A-Z]&quot;, &quot;_$0&quot;).toLowerCase();
+<span class="fc" id="L43">        return fieldName;</span>
+    }
+
+    /**
+     * 获取对象中指定字段的值和类型
+     * @param ob
+     * @param name
+     * @return
+     * @throws Exception
+     */
+    public static PropertyValue getGetPropertyValue(Object ob , String name){
+<span class="fc" id="L54">        Method[] m = ob.getClass().getMethods();</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        for(int i = 0;i &lt; m.length;i++){</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">            if((&quot;get&quot;+name).toLowerCase().equals(m[i].getName().toLowerCase())){</span>
+<span class="fc" id="L57">                PropertyValue propertyValue = new PropertyValue();</span>
+<span class="fc" id="L58">                Object value = null;</span>
+                try {
+<span class="fc" id="L60">                    value = m[i].invoke(ob);</span>
+<span class="nc" id="L61">                } catch (Exception e) {</span>
+<span class="nc" id="L62">                    throw new RuntimeException(e);</span>
+<span class="fc" id="L63">                }</span>
+<span class="fc" id="L64">                propertyValue.setValue(value);</span>
+<span class="fc" id="L65">                propertyValue.setValueClass(m[i].getReturnType());</span>
+<span class="fc" id="L66">                return propertyValue;</span>
+            }
+        }
+<span class="nc" id="L69">        return null;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

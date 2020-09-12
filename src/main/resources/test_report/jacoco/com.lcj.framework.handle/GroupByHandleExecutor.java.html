@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupByHandleExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">interview</a> &gt; <a href="index.source.html" class="el_package">com.lcj.framework.handle</a> &gt; <span class="el_source">GroupByHandleExecutor.java</span></div><h1>GroupByHandleExecutor.java</h1><pre class="source lang-java linenums">package com.lcj.framework.handle;
+
+import com.lcj.framework.common.PropertyValue;
+import com.lcj.framework.common.ReflectUtil;
+import com.lcj.framework.domain.GroupBy;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * 分组
+ * 这里的分组类似数据库的查询，而不是把数据按照分组字段将数据分成多个list,因为那样order by 和 limit就没有意义了
+ * @param &lt;T&gt;
+ */
+<span class="fc" id="L16">public class GroupByHandleExecutor&lt;T&gt;{</span>
+    //分组字段组合key分割符
+<span class="fc" id="L18">    private static String GROUP_KEY_SEPARATOR = &quot;#%#&quot;;</span>
+
+<span class="fc" id="L20">    private static String GROUP_SUM_PROPERTY_KEY_PRE = &quot;sum_&quot;;</span>
+
+<span class="fc" id="L22">    private static String GROUP_COUNT_PROPERTY_KEY = &quot;count&quot;;</span>
+
+    public List&lt;Map&lt;String,Object&gt;&gt; execute(List&lt;T&gt; dataSourceList, GroupBy groupBy) {
+<span class="pc bpc" id="L25" title="2 of 4 branches missed.">        if(groupBy == null || groupBy.getRuleChains().isEmpty()){</span>
+<span class="nc" id="L26">            throw new IllegalArgumentException(&quot;GroupByHandleExecutor parameter error&quot;);</span>
+        }
+
+<span class="fc" id="L29">        List&lt;Map&lt;String,Object&gt;&gt; handleResultList = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L30" title="2 of 4 branches missed.">        if(dataSourceList == null || dataSourceList.isEmpty()){</span>
+<span class="nc" id="L31">            return null;</span>
+        }
+
+        //1、没有聚合函数、直接返回分组字段值
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if(groupBy.getAggregationChains().isEmpty()){</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            for (T oneSource : dataSourceList){</span>
+<span class="nc" id="L37">                Map&lt;String,Object&gt; handleResultEntry = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">                for(GroupBy.GroupByRule groupByRule : groupBy.getRuleChains()){</span>
+<span class="nc" id="L39">                    PropertyValue propertyValue = ReflectUtil.getGetPropertyValue(oneSource,groupByRule.getPropertyName());</span>
+<span class="nc" id="L40">                    handleResultEntry.put(groupByRule.getPropertyName(),propertyValue.getValue());</span>
+<span class="nc" id="L41">                }</span>
+<span class="nc" id="L42">                handleResultList.add(handleResultEntry);</span>
+<span class="nc" id="L43">            }</span>
+
+<span class="nc" id="L45">            return handleResultList;</span>
+        }
+
+        //2、分组聚合
+<span class="fc" id="L49">        Map&lt;String,Map&lt;String,Object&gt;&gt; aggregationMap = aggregationToMap(dataSourceList,groupBy);</span>
+
+        //3、遍历groupDataMap放入返回结果中
+<span class="fc" id="L52">        List&lt;String&gt; groupPropertyList= groupBy.getRuleChains().stream().map(GroupBy.GroupByRule::getPropertyName).collect(Collectors.toList());</span>
+<span class="fc" id="L53">        Set&lt;Map.Entry&lt;String,Map&lt;String,Object&gt;&gt;&gt; aggregationEntrys = aggregationMap.entrySet();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        for(Map.Entry&lt;String,Map&lt;String,Object&gt;&gt; aggregationEntry : aggregationEntrys){</span>
+<span class="fc" id="L55">            Map&lt;String,Object&gt; handleResultEntry = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L56">            String groupKey = aggregationEntry.getKey();</span>
+<span class="fc" id="L57">            String[] groupKeyValueArray = groupKey.split(GROUP_KEY_SEPARATOR);</span>
+            //3.1处理返回分组字段的值
+<span class="fc bfc" id="L59" title="All 2 branches covered.">            for(int i = 0 ; i &lt; groupPropertyList.size() ; i++){</span>
+<span class="fc" id="L60">                handleResultEntry.put(groupPropertyList.get(i),groupKeyValueArray[i]);</span>
+            }
+
+            //3.2处理聚合函数的返回值
+<span class="fc" id="L64">            Map&lt;String,Object&gt; groupValue = aggregationEntry.getValue();</span>
+<span class="fc" id="L65">            transAggregationMapToResultData(groupValue,handleResultEntry,groupBy.getAggregationChains());</span>
+
+<span class="fc" id="L67">            handleResultList.add(handleResultEntry);</span>
+<span class="fc" id="L68">        }</span>
+
+<span class="fc" id="L70">        return handleResultList;</span>
+    }
+
+    /**
+     * 将数据转化成分组字段组合为key、
+     * 各个求聚合函数字段的sum_和key包含的记录条数count的Map
+     * @param dataSourceList
+     * @param groupBy
+     * @return
+     */
+    private Map&lt;String,Map&lt;String,Object&gt;&gt; aggregationToMap(List&lt;T&gt; dataSourceList,GroupBy groupBy){
+        //1、将所有数据统计分组放入Map中
+<span class="fc" id="L82">        Map&lt;String,Map&lt;String,Object&gt;&gt; groupDataMap = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        for (T oneSource : dataSourceList){</span>
+            //分组数据key=GROUP_KEY_SEPARATOR+分组字段值+GROUP_KEY_SEPARATOR+分组字段值
+<span class="fc" id="L85">            String groupKey = &quot;&quot;;</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            for(GroupBy.GroupByRule groupByRule : groupBy.getRuleChains()){</span>
+<span class="fc" id="L87">                PropertyValue propertyValue = ReflectUtil.getGetPropertyValue(oneSource,groupByRule.getPropertyName());</span>
+                //组合分组数据key包含：记录条数count、sum、max、min等的值(目前只保存sum、count)
+<span class="fc" id="L89">                groupKey = groupKey + GROUP_KEY_SEPARATOR + propertyValue.getValue();</span>
+<span class="fc" id="L90">            }</span>
+<span class="fc" id="L91">            groupKey = groupKey.substring(GROUP_KEY_SEPARATOR.length());</span>
+
+            Map&lt;String,Object&gt; groupOneData;
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (groupDataMap.containsKey(groupKey)) {</span>
+<span class="fc" id="L95">                groupOneData = groupDataMap.get(groupKey);</span>
+<span class="fc" id="L96">                Integer count = Integer.valueOf(groupOneData.get(GROUP_COUNT_PROPERTY_KEY).toString());</span>
+<span class="fc" id="L97">                groupOneData.put(GROUP_COUNT_PROPERTY_KEY,++count);</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                for(GroupBy.AggregationRule aggregationRule : groupBy.getAggregationChains()){</span>
+<span class="fc" id="L99">                    PropertyValue aggregationPropertyValue = ReflectUtil.getGetPropertyValue(oneSource,aggregationRule.getAggregationProperty());</span>
+<span class="fc" id="L100">                    String sumKey = GROUP_SUM_PROPERTY_KEY_PRE + aggregationRule.getAggregationProperty();</span>
+<span class="fc" id="L101">                    Double sumAggregationProperty = (double)groupOneData.get(sumKey);</span>
+<span class="fc" id="L102">                    Object aggregationValue = aggregationPropertyValue.getValue();</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">                    if(aggregationValue != null){</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                        if(aggregationValue instanceof BigDecimal){</span>
+<span class="nc" id="L105">                            sumAggregationProperty = sumAggregationProperty + ((BigDecimal) aggregationValue).doubleValue();</span>
+                        }else{
+<span class="fc" id="L107">                            sumAggregationProperty  = sumAggregationProperty + Double.valueOf(&quot;&quot; + aggregationValue);</span>
+                        }
+                    }
+<span class="fc" id="L110">                    groupOneData.put(sumKey,sumAggregationProperty);</span>
+<span class="fc" id="L111">                }</span>
+<span class="fc" id="L112">            }else{</span>
+<span class="fc" id="L113">                groupOneData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L114">                groupOneData.put(GROUP_COUNT_PROPERTY_KEY,1);</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                for(GroupBy.AggregationRule aggregationRule : groupBy.getAggregationChains()){</span>
+<span class="fc" id="L116">                    PropertyValue aggregationPropertyValue = ReflectUtil.getGetPropertyValue(oneSource,aggregationRule.getAggregationProperty());</span>
+<span class="fc" id="L117">                    String sumKey = GROUP_SUM_PROPERTY_KEY_PRE + aggregationRule.getAggregationProperty();</span>
+<span class="fc" id="L118">                    Object aggregationValue = aggregationPropertyValue.getValue();</span>
+<span class="fc" id="L119">                    Double sumAggregationProperty = 0.0;</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                    if(aggregationValue != null){</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">                        if(aggregationValue instanceof BigDecimal){</span>
+<span class="nc" id="L122">                            sumAggregationProperty = ((BigDecimal) aggregationValue).doubleValue();</span>
+                        }else{
+<span class="fc" id="L124">                            sumAggregationProperty  = Double.valueOf(aggregationValue + &quot;&quot;);</span>
+                        }
+                    }
+<span class="fc" id="L127">                    groupOneData.put(sumKey,sumAggregationProperty);</span>
+<span class="fc" id="L128">                }</span>
+            }
+<span class="fc" id="L130">            groupDataMap.put(groupKey,groupOneData);</span>
+<span class="fc" id="L131">        }</span>
+
+<span class="fc" id="L133">        return groupDataMap;</span>
+    }
+
+    /**
+     * 将聚合的数据转化成结果输出
+     * @param aggregationMapEntry
+     * @param handleResultEntry
+     * @param aggregationChains
+     * @return
+     */
+    private void transAggregationMapToResultData( Map&lt;String,Object&gt; aggregationMapEntry,Map&lt;String,Object&gt; handleResultEntry,List&lt;GroupBy.AggregationRule&gt; aggregationChains){
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        for(GroupBy.AggregationRule oneAggregationRule : aggregationChains){</span>
+<span class="pc bpc" id="L145" title="1 of 3 branches missed.">            switch (oneAggregationRule.getType()){</span>
+                case GroupBy.SUM:
+<span class="fc" id="L147">                    handleResultEntry.put(oneAggregationRule.getAlias(),aggregationMapEntry.get(GROUP_SUM_PROPERTY_KEY_PRE + oneAggregationRule.getAggregationProperty()));</span>
+<span class="fc" id="L148">                    break;</span>
+                case GroupBy.AVG:
+<span class="fc" id="L150">                    Object sumValueObj = aggregationMapEntry.get(GROUP_SUM_PROPERTY_KEY_PRE + oneAggregationRule.getAggregationProperty());</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">                    if(sumValueObj == null){</span>
+<span class="nc" id="L152">                        break;</span>
+                    }
+<span class="fc" id="L154">                    Double sumValue = Double.valueOf(sumValueObj.toString());</span>
+<span class="fc" id="L155">                    Integer countValue = Integer.valueOf(aggregationMapEntry.get(GROUP_COUNT_PROPERTY_KEY).toString());</span>
+<span class="fc" id="L156">                    Integer scale = oneAggregationRule.getScale();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                    if(scale == null){</span>
+<span class="fc" id="L158">                        scale = 2;</span>
+                    }
+
+<span class="fc" id="L161">                    Double avgValue = (double) Math.round(sumValue/countValue * roundDivisor(scale)) / roundDivisor(scale);</span>
+<span class="fc" id="L162">                    handleResultEntry.put(oneAggregationRule.getAlias(),avgValue);</span>
+<span class="fc" id="L163">                    break;</span>
+                //TODO 处理其他聚合函数
+                default:
+<span class="nc" id="L166">                    throw new IllegalArgumentException(&quot;can not support type &quot; +oneAggregationRule.getType());</span>
+            }
+<span class="fc" id="L168">        }</span>
+<span class="fc" id="L169">    }</span>
+
+    private Double roundDivisor(Integer scale){
+<span class="fc" id="L172">        String divisorStr = &quot;1&quot;;</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">        if(scale == null){</span>
+<span class="nc" id="L174">            return Double.valueOf(divisorStr);</span>
+        }
+
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        for(int i = 0 ; i &lt; scale ; i++){</span>
+<span class="fc" id="L178">            divisorStr = divisorStr + &quot;0&quot;;</span>
+        }
+
+<span class="fc" id="L181">        return Double.valueOf(divisorStr);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

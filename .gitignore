@@ -1,0 +1,10 @@
+.idea/*
+**/target/**/*
+*.iml
+**/rebel.xml*
+.idea/
+/target/
+.classpath
+.project
+.settings/
+catalina.base_IS_UNDEFINED/logs/*

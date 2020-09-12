@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultQuery.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">interview</a> &gt; <a href="index.source.html" class="el_package">com.lcj.framework</a> &gt; <span class="el_source">DefaultQuery.java</span></div><h1>DefaultQuery.java</h1><pre class="source lang-java linenums">package com.lcj.framework;
+
+import com.lcj.framework.domain.QueryWrapper;
+import com.lcj.framework.handle.GroupByHandleExecutor;
+import com.lcj.framework.handle.OrderByLimitHandleExecutor;
+import com.lcj.framework.handle.WhereHandleExecutor;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 查询执行顺序
+ * where -&gt; group by -&gt; order by -&gt; limit
+ * @param &lt;T&gt;
+ */
+<span class="fc" id="L16">public class DefaultQuery&lt;T&gt; implements Query&lt;T&gt;{</span>
+
+    public List&lt;T&gt; query(List&lt;T&gt; sourceData ,QueryWrapper&lt;T&gt; queryWrapper) {
+<span class="pc bpc" id="L19" title="1 of 2 branches missed.">        if(queryWrapper.getGroupBy() != null){</span>
+<span class="nc" id="L20">            throw new IllegalArgumentException(&quot;query not support group by please use method queryGroupBy&quot;);</span>
+        }
+<span class="fc" id="L22">        List&lt;T&gt; filterAfterWhereList = new WhereHandleExecutor&lt;T&gt;().execute(sourceData,queryWrapper.getWhere());</span>
+<span class="fc" id="L23">        List&lt;T&gt; sortLimitList = new OrderByLimitHandleExecutor&lt;T&gt;().execute(filterAfterWhereList,queryWrapper.getOrderBy(),queryWrapper.getLimit());</span>
+<span class="fc" id="L24">        return sortLimitList;</span>
+    }
+
+    @Override
+    public List&lt;Map&lt;String, Object&gt;&gt; queryGroupBy(List&lt;T&gt; sourceData, QueryWrapper&lt;T&gt; queryWrapper) {
+<span class="fc" id="L29">        List&lt;T&gt; filterAfterWhereList = new WhereHandleExecutor&lt;T&gt;().execute(sourceData,queryWrapper.getWhere());</span>
+<span class="fc" id="L30">        List&lt;Map&lt;String,Object&gt;&gt; groupByList = new GroupByHandleExecutor().execute(filterAfterWhereList,queryWrapper.getGroupBy());</span>
+<span class="fc" id="L31">        List&lt;Map&lt;String,Object&gt;&gt; sortLimitList = new OrderByLimitHandleExecutor&lt;Map&lt;String,Object&gt;&gt;().execute(groupByList,queryWrapper.getOrderBy(),queryWrapper.getLimit());</span>
+<span class="fc" id="L32">        return sortLimitList;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

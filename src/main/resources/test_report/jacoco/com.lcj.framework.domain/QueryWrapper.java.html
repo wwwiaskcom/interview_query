@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueryWrapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">interview</a> &gt; <a href="index.source.html" class="el_package">com.lcj.framework.domain</a> &gt; <span class="el_source">QueryWrapper.java</span></div><h1>QueryWrapper.java</h1><pre class="source lang-java linenums">package com.lcj.framework.domain;
+
+import com.lcj.framework.common.ReflectUtil;
+import com.lcj.framework.common.SFunction;
+
+import java.util.List;
+
+public class QueryWrapper&lt;T&gt; {
+    private Where where;
+    private GroupBy groupBy;
+    private OrderBy orderBy;
+    private Limit limit;
+
+<span class="fc" id="L14">    public QueryWrapper(){</span>
+<span class="fc" id="L15">        this.init();</span>
+<span class="fc" id="L16">    }</span>
+
+    public void init(){
+<span class="fc" id="L19">        this.where = new Where();</span>
+<span class="fc" id="L20">    }</span>
+
+    public QueryWrapper&lt;T&gt; or() {
+<span class="fc" id="L23">        this.where.or();</span>
+<span class="fc" id="L24">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; isNull(SFunction&lt;T, ?&gt; property) {
+<span class="nc" id="L28">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L29">        this.where.isNull(propertyName);</span>
+<span class="nc" id="L30">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; isNotNull(SFunction&lt;T, ?&gt; property) {
+<span class="nc" id="L34">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L35">        this.where.isNull(propertyName);</span>
+<span class="nc" id="L36">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; isEmpty(SFunction&lt;T, ?&gt; property) {
+<span class="fc" id="L40">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L41">        this.where.isEmpty(propertyName);</span>
+<span class="fc" id="L42">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; isNotEmpty(SFunction&lt;T, ?&gt; property) {
+<span class="fc" id="L46">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L47">        this.where.isNotEmpty(propertyName);</span>
+<span class="fc" id="L48">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; like(SFunction&lt;T, ?&gt; property, Object value) {
+<span class="fc" id="L52">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L53">        this.where.like(propertyName,value);</span>
+<span class="fc" id="L54">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; equal(SFunction&lt;T, ?&gt; property, Object value) {
+<span class="fc" id="L58">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L59">        this.where.equal(propertyName,value);</span>
+<span class="fc" id="L60">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; notEqual(SFunction&lt;T, ?&gt; property, Object value) {
+<span class="nc" id="L64">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L65">        this.where.notEqual(propertyName,value);</span>
+<span class="nc" id="L66">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; between(SFunction&lt;T, ?&gt; property, Object... values) {
+<span class="nc" id="L70">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L71">        this.where.between(propertyName,values);</span>
+<span class="nc" id="L72">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; in(SFunction&lt;T, ?&gt; property, List&lt;Object&gt; values) {
+<span class="fc" id="L76">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L77">        this.where.in(propertyName,values);</span>
+<span class="fc" id="L78">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; notIn(SFunction&lt;T, ?&gt; property, List&lt;Object&gt; values) {
+<span class="nc" id="L82">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L83">        this.where.notIn(propertyName,values);</span>
+<span class="nc" id="L84">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; greaterThan(SFunction&lt;T, ?&gt; property, Object value) {
+<span class="fc" id="L88">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L89">        this.where.greaterThan(propertyName,value);</span>
+<span class="fc" id="L90">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; greaterEqual(SFunction&lt;T, ?&gt; property, Object value) {
+<span class="nc" id="L94">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L95">        this.where.greaterEqual(propertyName,value);</span>
+<span class="nc" id="L96">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; lessThan(SFunction&lt;T, ?&gt; property, Object value) {
+<span class="nc" id="L100">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L101">        this.where.lessThan(propertyName,value);</span>
+<span class="nc" id="L102">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; lessEqual(SFunction&lt;T, ?&gt; property, Object value) {
+<span class="nc" id="L106">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="nc" id="L107">        this.where.lessEqual(propertyName,value);</span>
+<span class="nc" id="L108">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; groupBy(SFunction&lt;T, ?&gt; property){
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if(this.groupBy == null){</span>
+<span class="fc" id="L113">            this.groupBy = new GroupBy();</span>
+        }
+<span class="fc" id="L115">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L116">        this.groupBy.addGroupByProperty(propertyName);</span>
+<span class="fc" id="L117">        return this;</span>
+    }
+
+    /**
+     * avg sum 目前只支持group by，不能像mysql那样可以用在不分组的情况
+     * @param property
+     * @param alias
+     * @return
+     */
+    public QueryWrapper&lt;T&gt; avg(SFunction&lt;T, ?&gt; property,String alias){
+<span class="fc" id="L127">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L128">        this.groupBy.avg(propertyName,alias);</span>
+<span class="fc" id="L129">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; sum(SFunction&lt;T, ?&gt; property,String alias){
+<span class="fc" id="L133">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L134">        this.groupBy.sum(propertyName,alias);</span>
+<span class="fc" id="L135">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; asc(SFunction&lt;T, ?&gt; property){
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if(this.orderBy == null){</span>
+<span class="fc" id="L140">            this.orderBy = new OrderBy();</span>
+        }
+<span class="fc" id="L142">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L143">        this.orderBy.orderAsc(propertyName);</span>
+<span class="fc" id="L144">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; asc(String propertyName){
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if(this.orderBy == null){</span>
+<span class="fc" id="L149">            this.orderBy = new OrderBy();</span>
+        }
+<span class="fc" id="L151">        this.orderBy.orderAsc(propertyName);</span>
+<span class="fc" id="L152">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; desc(SFunction&lt;T, ?&gt; property){
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if(this.orderBy == null){</span>
+<span class="nc" id="L157">            this.orderBy = new OrderBy();</span>
+        }
+<span class="fc" id="L159">        String propertyName = ReflectUtil.getFieldName(property);</span>
+<span class="fc" id="L160">        this.orderBy.orderDesc(propertyName);</span>
+<span class="fc" id="L161">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; desc(String propertyName){
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if(this.orderBy == null){</span>
+<span class="nc" id="L166">            this.orderBy = new OrderBy();</span>
+        }
+<span class="fc" id="L168">        this.orderBy.orderAsc(propertyName);</span>
+<span class="fc" id="L169">        return this;</span>
+    }
+
+    public QueryWrapper&lt;T&gt; limit(Integer limitNum){
+<span class="fc" id="L173">        this.limit = new Limit(limitNum);</span>
+<span class="fc" id="L174">        return this;</span>
+    }
+
+    public Where getWhere() {
+<span class="fc" id="L178">        return where;</span>
+    }
+
+    public void setWhere(Where where) {
+<span class="nc" id="L182">        this.where = where;</span>
+<span class="nc" id="L183">    }</span>
+
+    public GroupBy getGroupBy() {
+<span class="fc" id="L186">        return groupBy;</span>
+    }
+
+    public void setGroupBy(GroupBy groupBy) {
+<span class="nc" id="L190">        this.groupBy = groupBy;</span>
+<span class="nc" id="L191">    }</span>
+
+    public OrderBy getOrderBy() {
+<span class="fc" id="L194">        return orderBy;</span>
+    }
+
+    public void setOrderBy(OrderBy orderBy) {
+<span class="nc" id="L198">        this.orderBy = orderBy;</span>
+<span class="nc" id="L199">    }</span>
+
+    public Limit getLimit() {
+<span class="fc" id="L202">        return limit;</span>
+    }
+
+    public void setLimit(Limit limit) {
+<span class="nc" id="L206">        this.limit = limit;</span>
+<span class="nc" id="L207">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

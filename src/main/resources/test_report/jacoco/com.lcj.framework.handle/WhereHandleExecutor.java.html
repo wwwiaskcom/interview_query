@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WhereHandleExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">interview</a> &gt; <a href="index.source.html" class="el_package">com.lcj.framework.handle</a> &gt; <span class="el_source">WhereHandleExecutor.java</span></div><h1>WhereHandleExecutor.java</h1><pre class="source lang-java linenums">package com.lcj.framework.handle;
+
+import com.lcj.framework.common.PropertyValue;
+import com.lcj.framework.common.ReflectUtil;
+import com.lcj.framework.domain.QueryHandleType;
+import com.lcj.framework.domain.Where;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 现在的逻辑是没有默认都是and的逻辑，除非单独加or
+ * 先实现简单的方式，不带括号的方式
+ * @param &lt;T&gt;
+ */
+<span class="fc" id="L16">public class WhereHandleExecutor&lt;T&gt; {</span>
+
+    public List&lt;T&gt; execute(List&lt;T&gt; dataSourceList, Where where) {
+<span class="pc bpc" id="L19" title="1 of 4 branches missed.">        if(where == null || where.getRuleChains().size() == 0){</span>
+<span class="fc" id="L20">            return dataSourceList;</span>
+        }
+
+<span class="fc" id="L23">        List&lt;T&gt; handleResultList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L24" title="All 4 branches covered.">        if(dataSourceList == null || dataSourceList.isEmpty()){</span>
+<span class="fc" id="L25">            return null;</span>
+        }
+
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        for(T oneSource : dataSourceList){</span>
+<span class="fc" id="L29">            List&lt;OneWhereJudgeResult&gt; whereJudgeResultList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L30">            int curAndOrFlag = Where.AND;</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">            for (int i = 0; i &lt; where.getRuleChains().size(); i++) {</span>
+<span class="fc" id="L32">                Where.WhereRule rule = where.getRuleChains().get(i);</span>
+                //排除第一个条件是and 和 or
+<span class="pc bpc" id="L34" title="2 of 8 branches missed.">                if((i == 0 || i == where.getRuleChains().size() - 1) &amp;&amp; (rule.getType() == Where.AND || rule.getType() == Where.OR)){</span>
+<span class="nc" id="L35">                    continue;</span>
+                }
+<span class="fc" id="L37">                Boolean currJudge = false;</span>
+<span class="pc bpc" id="L38" title="1 of 16 branches missed.">                switch (rule.getType()) {</span>
+                    case Where.OR:
+<span class="fc" id="L40">                        curAndOrFlag = Where.OR;</span>
+<span class="fc" id="L41">                        break;</span>
+                    case Where.EQ:
+<span class="fc" id="L43">                        currJudge = processEqual(oneSource,rule);</span>
+<span class="fc" id="L44">                        break;</span>
+                    case Where.LIKE:
+<span class="fc" id="L46">                        currJudge = processLike(oneSource,rule);</span>
+<span class="fc" id="L47">                        break;</span>
+                    case Where.BETWEEN:
+<span class="fc" id="L49">                        currJudge = processBetween(oneSource,rule);</span>
+<span class="fc" id="L50">                        break;</span>
+                    case Where.NOTEQ:
+<span class="fc" id="L52">                        currJudge = processNotEqual(oneSource,rule);</span>
+<span class="fc" id="L53">                        break;</span>
+                    case Where.GT:
+<span class="fc" id="L55">                        currJudge = processGreaterThen(oneSource,rule);</span>
+<span class="fc" id="L56">                        break;</span>
+                    case Where.GE:
+<span class="fc" id="L58">                        currJudge = processGreaterEqual(oneSource,rule);</span>
+<span class="fc" id="L59">                        break;</span>
+                    case Where.LT:
+<span class="fc" id="L61">                        currJudge = processLessThen(oneSource,rule);</span>
+<span class="fc" id="L62">                        break;</span>
+                    case Where.LE:
+<span class="fc" id="L64">                        currJudge = processLessEqual(oneSource,rule);</span>
+<span class="fc" id="L65">                        break;</span>
+                    case Where.IN:
+<span class="fc" id="L67">                        currJudge = processIN(oneSource,rule);</span>
+<span class="fc" id="L68">                        break;</span>
+                    case Where.NOTIN:
+<span class="fc" id="L70">                        currJudge = processNotIN(oneSource,rule);</span>
+<span class="fc" id="L71">                        break;</span>
+                    case Where.ISNULL:
+<span class="fc" id="L73">                        currJudge = processIsNull(oneSource,rule);</span>
+<span class="fc" id="L74">                        break;</span>
+                    case Where.ISNOTNULL:
+<span class="fc" id="L76">                        currJudge = processIsNotNull(oneSource,rule);</span>
+<span class="fc" id="L77">                        break;</span>
+                    case Where.ISEMPTY:
+<span class="fc" id="L79">                        currJudge = processIsEmpty(oneSource,rule);</span>
+<span class="fc" id="L80">                        break;</span>
+                    case Where.ISNOTEMPTY:
+<span class="fc" id="L82">                        currJudge = processIsNotEmpty(oneSource,rule);</span>
+<span class="fc" id="L83">                        break;</span>
+                    default:
+<span class="nc" id="L85">                        throw new IllegalArgumentException(&quot;type &quot; + rule.getType() + &quot; not supported.&quot;);</span>
+                }
+
+                //如果rule是or 或者 and 就不判断
+<span class="pc bpc" id="L89" title="1 of 4 branches missed.">                if(rule.getType() != Where.OR &amp;&amp; rule.getType() != Where.AND){</span>
+<span class="fc" id="L90">                    whereJudgeResultList.add(new OneWhereJudgeResult(curAndOrFlag,currJudge));</span>
+                    //or在判断一次后重置成AND
+<span class="fc bfc" id="L92" title="All 2 branches covered.">                    if(curAndOrFlag == Where.OR){</span>
+<span class="fc" id="L93">                        curAndOrFlag = Where.AND;</span>
+                    }
+                }
+            }
+
+<span class="fc bfc" id="L98" title="All 2 branches covered.">            if(oneDataJudgeWhereResult(whereJudgeResultList)){</span>
+<span class="fc" id="L99">                handleResultList.add(oneSource);</span>
+            }
+<span class="fc" id="L101">        }</span>
+<span class="fc" id="L102">        return handleResultList;</span>
+    }
+
+    /**
+     * 一个where条件判断结果
+     * 为了实现简单会把所有条件判断结果记录下来，全部判断
+     */
+    private class OneWhereJudgeResult{
+        private int andOr;
+        private Boolean judgeResult;
+
+<span class="fc" id="L113">        public OneWhereJudgeResult(int andOr, Boolean judgeResult) {</span>
+<span class="fc" id="L114">            this.andOr = andOr;</span>
+<span class="fc" id="L115">            this.judgeResult = judgeResult;</span>
+<span class="fc" id="L116">        }</span>
+
+        public int getAndOr() {
+<span class="fc" id="L119">            return andOr;</span>
+        }
+
+        public Boolean getJudgeResult() {
+<span class="fc" id="L123">            return judgeResult;</span>
+        }
+    }
+
+    /**
+     * 处理相等的情况
+     * @param oneSource
+     * @param rule
+     * @return
+     */
+    Boolean processEqual(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L134">        Object[] conditionValues = rule.getValues();</span>
+<span class="fc" id="L135">        PropertyValue propertyValue = ReflectUtil.getGetPropertyValue(oneSource,rule.getPropertyName());</span>
+<span class="pc bpc" id="L136" title="2 of 4 branches missed.">        if(conditionValues == null || conditionValues.length != 1){</span>
+<span class="nc" id="L137">            throw new IllegalArgumentException(&quot;values length is error&quot;);</span>
+        }
+<span class="fc" id="L139">        Object conditionValue = conditionValues[0];</span>
+
+<span class="fc" id="L141">        Class&lt;?&gt; type = propertyValue.getValueClass();</span>
+        //TODO 尝试将条件参数类型转换成bean中的类类型、现在如果传入的条件参数和bean类型不一致，不能用equals
+<span class="fc" id="L143">        Boolean curStepPass = conditionValue.equals(propertyValue.getValue());</span>
+
+<span class="fc" id="L145">        return curStepPass;</span>
+    }
+
+    Boolean processLike(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L149">        return true;</span>
+    }
+    Boolean processBetween(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L152">        return true;</span>
+    }
+    Boolean processNotEqual(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L155">        return true;</span>
+    }
+    Boolean processGreaterThen(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L158">        return true;</span>
+    }
+    Boolean processGreaterEqual(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L161">        return true;</span>
+    }
+    Boolean processLessThen(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L164">        return true;}</span>
+    Boolean processLessEqual(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L166">        return true;</span>
+    }
+    Boolean processIN(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L169">        return true;</span>
+    }
+    Boolean processNotIN(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L172">        return true;</span>
+    }
+    Boolean processIsNull(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L175">        return true;</span>
+    }
+    Boolean processIsNotNull(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L178">        return true;</span>
+    }
+    Boolean processIsEmpty(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L181">        return true;</span>
+    }
+    Boolean processIsNotEmpty(T oneSource,Where.WhereRule rule){
+<span class="fc" id="L184">        return true;</span>
+    }
+
+    /**
+     * 判断一条数据是否满足where条件
+     * @param whereJudgeResultList
+     * @return
+     */
+    private Boolean oneDataJudgeWhereResult(List&lt;OneWhereJudgeResult&gt; whereJudgeResultList){
+<span class="fc" id="L193">        Boolean judgeResult = null;</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        for(OneWhereJudgeResult oneWhereJudgeResult : whereJudgeResultList){</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">            if(judgeResult == null){</span>
+<span class="fc" id="L196">                judgeResult = oneWhereJudgeResult.getJudgeResult();</span>
+            }
+
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if(oneWhereJudgeResult.getAndOr() == Where.AND){</span>
+<span class="pc bpc" id="L200" title="1 of 4 branches missed.">                judgeResult = judgeResult &amp;&amp; oneWhereJudgeResult.getJudgeResult();</span>
+            }else{
+<span class="fc bfc" id="L202" title="All 4 branches covered.">                judgeResult = judgeResult || oneWhereJudgeResult.getJudgeResult();</span>
+            }
+<span class="fc" id="L204">        }</span>
+
+<span class="fc" id="L206">        return judgeResult;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
